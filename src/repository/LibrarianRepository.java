@@ -1,6 +1,6 @@
-package Repository;
+package repository;
 
-import Entities.Librarian;
+import entities.Librarian;
 
 import java.util.ArrayList;
 import java.util.Comparator;

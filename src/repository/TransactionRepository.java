@@ -1,6 +1,6 @@
-package Repository;
+package repository;
 
-import Entities.Transaction;
+import entities.Transaction;
 
 import java.util.ArrayList;
 import java.util.Comparator;

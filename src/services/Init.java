@@ -1,6 +1,6 @@
-package Services;
+package services;
 
-import Entities.*;
+import entities.*;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import Repository.*;
+import repository.*;
 
 public class Init {
     private AuthorRepository AuthorsRepo = new AuthorRepository();

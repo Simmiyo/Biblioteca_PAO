@@ -1,4 +1,4 @@
-package Entities;
+package entities;
 
 import java.math.BigDecimal;
 import java.util.Objects;

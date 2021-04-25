@@ -1,7 +1,7 @@
-package Main;
+package main;
 
-import Services.Init;
-import Services.Library;
+import services.Init;
+import services.Library;
 
 import java.text.ParseException;
 

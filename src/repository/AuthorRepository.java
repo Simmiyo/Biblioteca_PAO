@@ -1,6 +1,6 @@
-package Repository;
+package repository;
 
-import Entities.Author;
+import entities.Author;
 
 import java.util.ArrayList;
 import java.util.Comparator;

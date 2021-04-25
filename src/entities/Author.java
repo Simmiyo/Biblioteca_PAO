@@ -1,6 +1,6 @@
-package Entities;
+package entities;
 
-import Services.Pair;
+import services.Pair;
 
 import java.util.Date;
 import java.util.Objects;

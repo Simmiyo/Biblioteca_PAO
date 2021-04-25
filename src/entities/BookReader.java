@@ -1,9 +1,9 @@
-package Entities;
+package entities;
 
 import java.util.*;
 
-import Services.Pair;
-import Services.Triplet;
+import services.Pair;
+import services.Triplet;
 
 public class BookReader extends LibrarySubscriber{
     private String Address;

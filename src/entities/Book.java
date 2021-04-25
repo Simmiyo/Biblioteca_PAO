@@ -1,9 +1,9 @@
-package Entities;
+package entities;
 
 import java.util.Date;
 import java.util.Objects;
 
-public class Book {
+public class Book implements Comparable<Book>{
     private String ISBN;
     private String Title;
     private Author Author;
@@ -26,11 +26,11 @@ public class Book {
 
     public String getTitle() { return Title; }
 
-    public Entities.Author getAuthor() { return Author; }
+    public entities.Author getAuthor() { return Author; }
 
-    public Entities.Publisher getPublisher() { return Publisher; }
+    public entities.Publisher getPublisher() { return Publisher; }
 
-    public Entities.Section getSection() { return Section; }
+    public entities.Section getSection() { return Section; }
 
     public Date getApparition() { return Apparition; }
 
@@ -40,15 +40,20 @@ public class Book {
 
     public void setTitle(String title) { Title = title; }
 
-    public void setAuthor(Entities.Author author) { Author = author; }
+    public void setAuthor(entities.Author author) { Author = author; }
 
-    public void setPublisher(Entities.Publisher publisher) { Publisher = publisher; }
+    public void setPublisher(entities.Publisher publisher) { Publisher = publisher; }
 
-    public void setSection(Entities.Section section) { Section = section; }
+    public void setSection(entities.Section section) { Section = section; }
 
     public void setApparition(Date apparition) { Apparition = apparition; }
 
     public void setCoverType(String coverType) { CoverType = coverType; }
+
+    public int compareTo(Book b)
+    {
+        return this.Apparition.compareTo(b.Apparition);
+    }
 
     @Override
     public String toString() {

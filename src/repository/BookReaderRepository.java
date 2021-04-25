@@ -1,6 +1,6 @@
-package Repository;
+package repository;
 
-import Entities.BookReader;
+import entities.BookReader;
 
 import java.util.ArrayList;
 import java.util.Comparator;
