@@ -36,8 +36,8 @@ public class Init {
         AuthorsRepo.addAuthor(new Author("Lev Tolstoi","russian","realism",new Pair(d1,d2)));
 
         PublishersRepo.deletePublishers();
-        PublishersRepo.addPublisher(new Publisher("Valeria",true,"Elizabeth I Street"));
-        PublishersRepo.addPublisher(new Publisher("Time",false,"Euler Street"));
+        PublishersRepo.addPublisher(new Publisher("Valeria",true, new String[]{"Elizabeth I Street"}));
+        PublishersRepo.addPublisher(new Publisher("Time",false, new String[]{"Euler Street"}));
 
         Map<Integer,String> prog = new HashMap<Integer,String>();
         prog.put(1,"8:00 - 12:00");

@@ -1,0 +1,3 @@
+"Id", "Name", "PhoneNumber", "MembershipValidity", "StudyLevel", "Donation"
+0, Jane Doe, 1112223330, 01-01-2020;01-01-2021, Student, NaN
+1, Jhon Doe, 9998887776, 24-07-2019;24-07-2022, Phd, [(1;100;24-07-2019);(0;80;24-07-2019)]

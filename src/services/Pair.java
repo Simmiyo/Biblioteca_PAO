@@ -39,4 +39,8 @@ public class Pair<T, U> {
                 ", second=" + second +
                 '}';
     }
+
+    public String toStringForCsv() {
+        return first.toString() + ";" + second.toString();
+    }
 }

@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.Objects;
 
 public class Book implements Comparable<Book>{
+    private Integer Id;
     private String ISBN;
     private String Title;
     private Author Author;
@@ -21,6 +22,8 @@ public class Book implements Comparable<Book>{
         Apparition = date;
         CoverType = cover;
     }
+
+    public Integer getId() {return Id;}
 
     public String getISBN() { return ISBN; }
 
