@@ -55,10 +55,18 @@ public class Init {
         Date d0 = frmt.parse("18-05-1999");
         Date d00 = frmt.parse("10-02-2001");
         BooksRepo.deleteBooks();
-        BooksRepo.addBook(new Book("978-3-16-148410-0", "War and Peace", AuthorsRepo.getAuthor(1),
-                PublishersRepo.getPublisher(0), SectionsRepo.getSection(0), d0, "hardcover"));
-        BooksRepo.addBook(new Book("118-9-32-148410-0", "The Name Of The Rose", AuthorsRepo.getAuthor(0),
-                PublishersRepo.getPublisher(1), SectionsRepo.getSection(0), d00, "hardcover"));
+        try {
+            BooksRepo.addBook(new Book("978-3-16-148410-0", "War and Peace", AuthorsRepo.getAuthor(1),
+                    PublishersRepo.getPublisher(0), SectionsRepo.getSection(0), d0, "hardcover"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            BooksRepo.addBook(new Book("118-9-32-148410-0", "The Name Of The Rose", AuthorsRepo.getAuthor(0),
+                    PublishersRepo.getPublisher(1), SectionsRepo.getSection(0), d00, "hardcover"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         Date d3 = frmt.parse("01-01-2020");
         Date d4 = frmt.parse("01-01-2021");

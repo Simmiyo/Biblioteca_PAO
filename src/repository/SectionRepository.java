@@ -4,16 +4,15 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 import com.opencsv.exceptions.CsvException;
-import entities.Author;
 import entities.Section;
-import services.Pair;
 
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class SectionRepository {
@@ -37,55 +36,47 @@ public class SectionRepository {
             CSVReader csvReader = new CSVReaderBuilder(filereader)
                     .withSkipLines(1)
                     .build();
-            List<String[]> allData = csvReader.readAll();
 
-            List<Section> csv_objectList = csvReader.readAll().stream().map(data-> {
+            List<Section> csvObjectList = csvReader.readAll().stream().map(data-> {
                 Section section = new Section();
-                section.setId(Integer.parseInt(data[0]));
-                section.setLabel(data[1]);
-                section.setBookshelf(data[2].charAt(0));
+                section.setId(Integer.parseInt(data[0].trim()));
+                section.setLabel(data[1].trim());
+                section.setBookshelf(data[2].trim().charAt(0));
                 return section;
             }).collect(Collectors.toList());
-            this.Sections.addAll(csv_objectList);
+            this.Sections.addAll(csvObjectList);
         }
         catch (IOException | CsvException e) {
             e.printStackTrace();
         }
     }
 
-    public Section getSection(int i){
-        return this.Sections.get(i);
+    public Section getSection(Integer id){
+        for (Section section: Sections) {
+            if (section.getId().equals(id))
+                return section;
+        }
+        return null;
     }
 
 
     public void addSection(Section x){
-        Boolean exists = Boolean.FALSE;
-        ArrayList<Integer> ids = new ArrayList<>();
-        for (Section sect: Sections
-        ) {
-            if (sect.equals(x)) {
-                exists = Boolean.TRUE;
+        List<Integer> ids = Sections.stream().map(Section::getId).collect(Collectors.toList());
+        ids.sort(Comparator.comparing(Integer::valueOf));
+        for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
+            if (!i.equals(ids.get(i))) {
+                x.setId(i);
                 break;
             }
-            ids.add(sect.getId());
         }
-        if (!exists) {
-            ids.sort(Comparator.comparing(Integer::valueOf));
-            for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
-                if (i != ids.get(i)) {
-                    x.setId(i);
-                    break;
-                }
-            }
-            try {
-                FileWriter filewriter = new FileWriter("data/sections.csv", true);
-                CSVWriter writer = new CSVWriter(filewriter);
-                writer.writeNext(new String[]{x.getId().toString(), x.getLabel(), x.getBookshelf().toString()});
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            this.Sections.add(x);
+        try {
+            FileWriter filewriter = new FileWriter("data/sections.csv", true);
+            CSVWriter writer = new CSVWriter(filewriter);
+            writer.writeNext(new String[]{x.getId().toString(), x.getLabel(), x.getBookshelf().toString()});
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        this.Sections.add(x);
     }
 
     //ramas
@@ -93,10 +84,10 @@ public class SectionRepository {
         this.Sections.remove(x);
     }
 
-    public Section aboutSection(String label){
-        for (int i=0;i<this.Sections.size();i++)
-            if(this.Sections.get(i).getLabel()==label)
-                return this.Sections.get(i);
+    public Section aboutSection(Integer id){
+        for (Section section : this.Sections)
+            if (section.getId().equals(id))
+                return section;
         return null;
     }
 
@@ -105,7 +96,7 @@ public class SectionRepository {
     }
 
     public void deleteSections(){
-        while (this.Sections.isEmpty()!=true)
+        while (!this.Sections.isEmpty())
             this.Sections.remove(0);
     }
 
@@ -113,7 +104,7 @@ public class SectionRepository {
         x.setId(id);
         for (int i=0;i<this.Sections.size();i++)
         {
-            if(this.Sections.get(i).getId() == id) {
+            if(this.Sections.get(i).getId().equals(id)) {
                 this.Sections.set(i, x);
                 break;
             }
@@ -132,6 +123,6 @@ public class SectionRepository {
 
     public void sortSections()
     {
-        getSections().sort(Comparator.comparing(Section::getLabel));
+        Collections.sort(Sections);
     }
 }

@@ -22,7 +22,7 @@ public class Section implements Comparable<Section> {
 
     public Character getBookshelf() { return Bookshelf; }
 
-    public void setId(Integer id) {Id = id;}
+    public void setId(Integer id) { Id = id; }
 
     public void setLabel(String label) { Label = label; }
 

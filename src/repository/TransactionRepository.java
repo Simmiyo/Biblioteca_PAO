@@ -38,57 +38,49 @@ public class TransactionRepository {
             CSVReader csvReader = new CSVReaderBuilder(filereader)
                     .withSkipLines(1)
                     .build();
-            List<String[]> allData = csvReader.readAll();
 
-            List<Transaction> csv_objectList = csvReader.readAll().stream().map(data-> {
+            List<Transaction> csvObjectList = csvReader.readAll().stream().map(data-> {
                 Transaction trans = new Transaction();
-                trans.setId(Integer.parseInt(data[0]));
-                trans.setMoneySum(new BigDecimal(data[1]));
-                trans.setBuyer(data[2]);
-                trans.setSeller(data[3]);
-                trans.setReason(data[4]);
+                trans.setId(Integer.parseInt(data[0].trim()));
+                trans.setMoneySum(new BigDecimal(data[1].trim()));
+                trans.setBuyer(data[2].trim());
+                trans.setSeller(data[3].trim());
+                trans.setReason(data[4].trim());
                 return trans;
             }).collect(Collectors.toList());
-            this.Transactions.addAll(csv_objectList);
+            this.Transactions.addAll(csvObjectList);
         }
         catch (IOException | CsvException e) {
             e.printStackTrace();
         }
     }
 
-    public Transaction getTransaction(int i){
-        return this.Transactions.get(i);
+    public Transaction getTransaction(Integer id){
+        for (Transaction transaction: Transactions) {
+            if (transaction.getId().equals(id))
+                return transaction;
+        }
+        return null;
     }
 
-    public void addTransaction(Transaction x){
-        Boolean exists = Boolean.FALSE;
-        ArrayList<Integer> ids = new ArrayList<>();
-        for (Transaction trans: Transactions
-        ) {
-            if (trans.equals(x)) {
-                exists = Boolean.TRUE;
+    public void addTransaction(Transaction x) {
+        List<Integer> ids = Transactions.stream().map(Transaction::getId).collect(Collectors.toList());
+        ids.sort(Comparator.comparing(Integer::valueOf));
+        for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
+            if (!i.equals(ids.get(i))) {
+                x.setId(i);
                 break;
             }
-            ids.add(trans.getId());
         }
-        if (!exists) {
-            ids.sort(Comparator.comparing(Integer::valueOf));
-            for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
-                if (i != ids.get(i)) {
-                    x.setId(i);
-                    break;
-                }
-            }
-            try {
-                FileWriter filewriter = new FileWriter("data/transactions.csv", true);
-                CSVWriter writer = new CSVWriter(filewriter);
-                writer.writeNext(new String[]{x.getId().toString(), x.getMoneySum().toString(),
-                        x.getBuyer(), x.getSeller(), x.getReason()});
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            this.Transactions.add(x);
+        try {
+            FileWriter filewriter = new FileWriter("data/transactions.csv", true);
+            CSVWriter writer = new CSVWriter(filewriter);
+            writer.writeNext(new String[]{x.getId().toString(), x.getMoneySum().toString(),
+                    x.getBuyer(), x.getSeller(), x.getReason()});
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        this.Transactions.add(x);
     }
 
     //ramas
@@ -97,9 +89,9 @@ public class TransactionRepository {
     }
 
     public Transaction aboutTransaction(String buyer, String seller){
-        for (int i=0;i<this.Transactions.size();i++)
-            if(this.Transactions.get(i).getBuyer()==buyer && this.Transactions.get(i).getSeller()==seller)
-                return this.Transactions.get(i);
+        for (Transaction transaction : this.Transactions)
+            if (transaction.getBuyer().equals(buyer) && transaction.getSeller().equals(seller))
+                return transaction;
         return null;
     }
 
@@ -108,7 +100,7 @@ public class TransactionRepository {
     }
 
     public void deleteTransactions(){
-        while (this.Transactions.isEmpty()!=true)
+        while (!this.Transactions.isEmpty())
             this.Transactions.remove(0);
     }
 
@@ -116,7 +108,7 @@ public class TransactionRepository {
         x.setId(id);
         for (int i=0;i<this.Transactions.size();i++)
         {
-            if(this.Transactions.get(i).getId() == id) {
+            if(this.Transactions.get(i).getId().equals(id)) {
                 this.Transactions.set(i, x);
                 break;
             }
@@ -136,6 +128,6 @@ public class TransactionRepository {
 
     public void sortTransactions()
     {
-        getTransactions().sort(Comparator.comparing(Transaction::getMoneySum));
+        Collections.sort(Transactions);
     }
 }

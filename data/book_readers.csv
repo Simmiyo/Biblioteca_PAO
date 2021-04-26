@@ -1,2 +1,2 @@
-"Id", "Address", "BorrowedBooks", "PenaltyPoints", "FidelityPoints"
+"SubscriberId", "Address", "BorrowedBooks", "PenaltyPoints", "FidelityPoints"
 0, Baker Street 221B, [(0;10-04-2021;false)], 0, 0

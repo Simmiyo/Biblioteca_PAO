@@ -23,6 +23,10 @@ public class Book implements Comparable<Book>{
         CoverType = cover;
     }
 
+    public Book() {
+
+    }
+
     public Integer getId() {return Id;}
 
     public String getISBN() { return ISBN; }
@@ -38,6 +42,8 @@ public class Book implements Comparable<Book>{
     public Date getApparition() { return Apparition; }
 
     public String getCoverType() { return CoverType; }
+
+    public void setId(Integer id) {this.Id = id;}
 
     public void setISBN(String ISBN) { this.ISBN = ISBN; }
 
@@ -61,6 +67,7 @@ public class Book implements Comparable<Book>{
     @Override
     public String toString() {
         return "Book{" +
+                "Id='" + Id.toString() + '\'' +
                 "Title='" + Title + '\'' +
                 ", Author=" + Author +
                 ", Publisher=" + Publisher +
@@ -76,11 +83,17 @@ public class Book implements Comparable<Book>{
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Book book = (Book) o;
-        return Objects.equals(getTitle(), book.getTitle()) && Objects.equals(getAuthor(), book.getAuthor()) && Objects.equals(getPublisher(), book.getPublisher()) && Objects.equals(getSection(), book.getSection()) && Objects.equals(getApparition(), book.getApparition()) && Objects.equals(getCoverType(), book.getCoverType());
+        return  Objects.equals(getId(), book.getId())
+                && Objects.equals(getTitle(), book.getTitle())
+                && Objects.equals(getAuthor(), book.getAuthor())
+                && Objects.equals(getPublisher(), book.getPublisher())
+                && Objects.equals(getSection(), book.getSection())
+                && Objects.equals(getApparition(), book.getApparition())
+                && Objects.equals(getCoverType(), book.getCoverType());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getISBN(), getTitle(), getAuthor(), getPublisher(), getSection(), getApparition(), getCoverType());
+        return Objects.hash(getId(), getISBN(), getTitle(), getAuthor(), getPublisher(), getSection(), getApparition(), getCoverType());
     }
 }

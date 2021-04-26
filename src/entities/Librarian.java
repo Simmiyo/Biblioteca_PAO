@@ -15,6 +15,10 @@ public class Librarian {
         Schedule = schedule;
     }
 
+    public Librarian() {
+
+    }
+
     public Integer getId() {return Id;}
 
     public String getName() { return Name; }

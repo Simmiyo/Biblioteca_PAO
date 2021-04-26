@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class LibrarySubscriber {
+    private Integer Id;
     private String Name;
     private String PhoneNumber;
     private Pair<Date, Date> MembershipValidity;
@@ -22,6 +23,12 @@ public class LibrarySubscriber {
         Donation = donation;
     }
 
+    public LibrarySubscriber() {
+
+    }
+
+    public Integer getId() { return Id; }
+
     public String getName() { return Name; }
 
     public String getPhoneNumber() { return PhoneNumber; }
@@ -31,6 +38,8 @@ public class LibrarySubscriber {
     public String getStudyLevel() { return StudyLevel; }
 
     public List<Triplet<Book, Integer, Date>> getDonation() { return Donation; }
+
+    public void setId(Integer id) { Id = id; }
 
     public void setName(String name) { Name = name; }
 
@@ -45,6 +54,7 @@ public class LibrarySubscriber {
     @Override
     public String toString() {
         return "LibrarySubscriber{" +
+                "Id='" + Id + '\'' +
                 "Name='" + Name + '\'' +
                 ", PhoneNumber='" + PhoneNumber + '\'' +
                 ", MembershipValidity=" + MembershipValidity +
@@ -58,11 +68,16 @@ public class LibrarySubscriber {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         LibrarySubscriber that = (LibrarySubscriber) o;
-        return Objects.equals(getName(), that.getName()) && Objects.equals(getPhoneNumber(), that.getPhoneNumber()) && Objects.equals(getMembershipValidity(), that.getMembershipValidity()) && Objects.equals(getStudyLevel(), that.getStudyLevel()) && Objects.equals(getDonation(), that.getDonation());
+        return  Objects.equals(getId(), that.getId())
+                && Objects.equals(getName(), that.getName())
+                && Objects.equals(getPhoneNumber(), that.getPhoneNumber())
+                && Objects.equals(getMembershipValidity(), that.getMembershipValidity())
+                && Objects.equals(getStudyLevel(), that.getStudyLevel())
+                && Objects.equals(getDonation(), that.getDonation());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getPhoneNumber(), getMembershipValidity(), getStudyLevel(), getDonation());
+        return Objects.hash(getId(), getName(), getPhoneNumber(), getMembershipValidity(), getStudyLevel(), getDonation());
     }
 }

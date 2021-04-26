@@ -5,15 +5,11 @@ import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 import com.opencsv.exceptions.CsvException;
 import entities.Publisher;
-import entities.Transaction;
-import services.Pair;
+import org.apache.commons.lang3.ObjectUtils;
 
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -39,59 +35,51 @@ public class PublisherRepository {
             CSVReader csvReader = new CSVReaderBuilder(filereader)
                     .withSkipLines(1)
                     .build();
-            List<String[]> allData = csvReader.readAll();
 
-            List<Publisher> csv_objectList = csvReader.readAll().stream().map(data-> {
+            List<Publisher> csvObjectList = csvReader.readAll().stream().map(data-> {
                 Publisher publisher = new Publisher();
-                publisher.setId(Integer.parseInt(data[0]));
-                publisher.setName(data[1]);
-                publisher.setContractor(Boolean.parseBoolean(data[2]));
-                publisher.setBranchOffices(Arrays.copyOfRange(data,3,data.length));
+                publisher.setId(Integer.parseInt(data[0].trim()));
+                publisher.setName(data[1].trim());
+                publisher.setContractor(Boolean.parseBoolean(data[2].trim()));
+                publisher.setBranchOffices(Arrays.copyOfRange(data[3].trim().split(";"),0,data.length));
                 return publisher;
             }).collect(Collectors.toList());
-            this.Publishers.addAll(csv_objectList);
+            this.Publishers.addAll(csvObjectList);
         }
         catch (IOException | CsvException e) {
             e.printStackTrace();
         }
     }
 
-    public Publisher getPublisher(int i){
-        return this.Publishers.get(i);
+    public Publisher getPublisher(Integer id){
+        for (Publisher publisher: Publishers) {
+            if (publisher.getId().equals(id))
+                return publisher;
+        }
+        return null;
     }
 
     public void addPublisher(Publisher x){
-        Boolean exists = Boolean.FALSE;
-        ArrayList<Integer> ids = new ArrayList<>();
-        for (Publisher publisher: Publishers
-        ) {
-            if (publisher.equals(x)) {
-                exists = Boolean.TRUE;
+        List<Integer> ids = Publishers.stream().map(Publisher::getId).collect(Collectors.toList());
+        ids.sort(Comparator.comparing(Integer::valueOf));
+        for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
+            if (i.equals(ids.get(i))) {
+                x.setId(i);
                 break;
             }
-            ids.add(publisher.getId());
         }
-        if (!exists) {
-            ids.sort(Comparator.comparing(Integer::valueOf));
-            for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
-                if (i != ids.get(i)) {
-                    x.setId(i);
-                    break;
-                }
-            }
-            try {
-                FileWriter filewriter = new FileWriter("data/publishers.csv", true);
-                CSVWriter writer = new CSVWriter(filewriter);
-                String[] firstPart = new String[]{x.getId().toString(), x.getName(),
-                        Boolean.toString(x.getContractor())};
-                String[] bothParts = Stream.concat(Arrays.stream(firstPart), Arrays.stream(x.getBranchOffices()))
-                        .toArray(String[]::new);
-                writer.writeNext(bothParts);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            this.Publishers.add(x);
+        try {
+            FileWriter filewriter = new FileWriter("data/publishers.csv", true);
+            CSVWriter writer = new CSVWriter(filewriter);
+            String[] firstPart = new String[]{x.getId().toString(), x.getName(),
+                    Boolean.toString(x.getContractor())};
+            String[] bothParts = Stream.concat(Arrays.stream(firstPart), Arrays.stream(x.getBranchOffices()))
+                    .toArray(String[]::new);
+            writer.writeNext(bothParts);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        this.Publishers.add(x);
     }
 
     //ramas
@@ -99,10 +87,10 @@ public class PublisherRepository {
         this.Publishers.remove(x);
     }
 
-    public Publisher aboutPublisher(String name){
-        for (int i=0;i<this.Publishers.size();i++)
-            if(this.Publishers.get(i).getName()==name)
-                return this.Publishers.get(i);
+    public Publisher aboutPublisher(Integer id){
+        for (Publisher publisher : this.Publishers)
+            if (publisher.getId().equals(id))
+                return publisher;
         return null;
     }
 
@@ -111,7 +99,7 @@ public class PublisherRepository {
     }
 
     public void deletePublishers(){
-        while (this.Publishers.isEmpty()!=true)
+        while (!this.Publishers.isEmpty())
             this.Publishers.remove(0);
     }
 
@@ -119,7 +107,7 @@ public class PublisherRepository {
         x.setId(id);
         for (int i=0;i<this.Publishers.size();i++)
         {
-            if(this.Publishers.get(i).getId() == id) {
+            if(this.Publishers.get(i).getId().equals(id)) {
                 this.Publishers.set(i, x);
                 break;
             }
@@ -129,11 +117,8 @@ public class PublisherRepository {
             CSVWriter writer = new CSVWriter(filewriter);
             writer.writeNext(new String[] {"Id", "Name", "IsContractor", "BranchOffices"});
             for (Publisher publisher: Publishers) {
-                String[] firstPart = new String[]{publisher.getId().toString(), publisher.getName(),
-                        Boolean.toString(publisher.getContractor())};
-                String[] bothParts = Stream.concat(Arrays.stream(firstPart), Arrays.stream(publisher.getBranchOffices()))
-                        .toArray(String[]::new);
-                writer.writeNext(bothParts);
+                writer.writeNext(new String[]{publisher.getId().toString(), publisher.getName(),
+                        String.valueOf(publisher.getContractor()), String.join(";", publisher.getBranchOffices())});
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -142,6 +127,6 @@ public class PublisherRepository {
 
     public void sortPublishers()
     {
-        getPublishers().sort(Comparator.comparing(Publisher::getName));
+        Collections.sort(Publishers);
     }
 }

@@ -46,7 +46,7 @@ public class Publisher implements Comparable<Publisher> {
                 "Id='" + Id.toString() + '\'' +
                 "Name='" + Name + '\'' +
                 ", isContractor=" + IsContractor +
-                ", BranchOffice='" + BranchOffices + '\'' +
+                ", BranchOffice='" + Arrays.toString(BranchOffices) + '\'' +
                 '}';
     }
 
@@ -56,7 +56,7 @@ public class Publisher implements Comparable<Publisher> {
         if (o == null || getClass() != o.getClass()) return false;
         Publisher publisher = (Publisher) o;
         return Objects.equals(getId(), publisher.getId())
-                &&getContractor() == publisher.getContractor()
+                && getContractor() == publisher.getContractor()
                 && Objects.equals(getName(), publisher.getName())
                 && Arrays.equals(getBranchOffices(), publisher.getBranchOffices());
     }

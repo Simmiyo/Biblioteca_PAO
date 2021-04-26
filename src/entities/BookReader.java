@@ -5,7 +5,7 @@ import java.util.*;
 import services.Pair;
 import services.Triplet;
 
-public class BookReader extends LibrarySubscriber{
+public class BookReader extends LibrarySubscriber {
     private String Address;
     private List<Triplet<Book, Date, Boolean>> BorrowedBooks; // borrowed books & date they were borrowed & the return status
     private Integer PenaltyPoints;
@@ -19,6 +19,14 @@ public class BookReader extends LibrarySubscriber{
         BorrowedBooks = borrowed;
         PenaltyPoints = penaltyPoints;
         FidelityPoints = fidelityPoints;
+    }
+
+    public BookReader(LibrarySubscriber libSub) {
+        super(libSub.getName(), libSub.getPhoneNumber(), libSub.getMembershipValidity(), libSub.getStudyLevel(), libSub.getDonation());
+    }
+
+    public BookReader() {
+        super();
     }
 
     public String getAddress() { return Address; }
@@ -40,6 +48,7 @@ public class BookReader extends LibrarySubscriber{
     @Override
     public String toString() {
         return "BookReader{" +
+                super.toString() +
                 "Address='" + Address + '\'' +
                 ", BorrowedBooks=" + BorrowedBooks +
                 ", PenaltyPoints=" + PenaltyPoints +
