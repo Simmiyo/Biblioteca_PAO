@@ -44,7 +44,7 @@ public class PublisherRepository {
                 publisher.setId(Integer.parseInt(data[0].trim()));
                 publisher.setName(data[1].trim());
                 publisher.setContractor(Boolean.parseBoolean(data[2].trim()));
-                publisher.setBranchOffices(Arrays.copyOfRange(data[3].trim().split(";"),0,data.length));
+                publisher.setBranchOffices(Arrays.copyOfRange(data[3].trim().split(","),0,data.length));
                 return publisher;
             }).collect(Collectors.toList());
             Publishers.addAll(csvObjectList);
@@ -83,11 +83,13 @@ public class PublisherRepository {
         try {
             FileWriter filewriter = new FileWriter("data/publishers.csv", true);
             CSVWriter writer = new CSVWriter(filewriter);
-            String[] firstPart = new String[]{x.getId().toString(), x.getName(),
-                    Boolean.toString(x.getContractor())};
-            String[] bothParts = Stream.concat(Arrays.stream(firstPart), Arrays.stream(x.getBranchOffices()))
-                    .toArray(String[]::new);
-            writer.writeNext(bothParts);
+
+            StringBuilder branches = new StringBuilder();
+            for (String branch: x.getBranchOffices()) {
+                branches.append(branch).append(",");
+            }
+            writer.writeNext(new String[]{x.getId().toString(), x.getName(),
+                    Boolean.toString(x.getContractor()), branches.toString()});
             writer.close();
         } catch (IOException e) {
             Logger.logOperation("New publisher added in csv file. - FAILED");
