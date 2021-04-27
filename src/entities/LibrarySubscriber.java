@@ -2,6 +2,7 @@ package entities;
 
 import services.*;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -12,10 +13,10 @@ public class LibrarySubscriber {
     private String PhoneNumber;
     private Pair<Date, Date> MembershipValidity;
     private String StudyLevel; // pupil, high school student, college student, Bachelor, Master, PhD
-    private List<Triplet<Book, Integer, Date>> Donation; // books brought & number of specimens & date they were donated
+    private ArrayList<Triplet<Book, Integer, Date>> Donation; // books brought & number of specimens & date they were donated
 
     public LibrarySubscriber(String name, String phone, Pair<Date,Date> member, String study,
-                             List<Triplet<Book,Integer,Date>> donation){
+                             ArrayList<Triplet<Book,Integer,Date>> donation){
         Name = name;
         PhoneNumber = phone;
         MembershipValidity = member;
@@ -37,7 +38,7 @@ public class LibrarySubscriber {
 
     public String getStudyLevel() { return StudyLevel; }
 
-    public List<Triplet<Book, Integer, Date>> getDonation() { return Donation; }
+    public ArrayList<Triplet<Book, Integer, Date>> getDonation() { return Donation; }
 
     public void setId(Integer id) { Id = id; }
 
@@ -49,7 +50,7 @@ public class LibrarySubscriber {
 
     public void setStudyLevel(String studyLevel) { StudyLevel = studyLevel; }
 
-    public void setDonation(List<Triplet<Book, Integer, Date>> donation) { Donation = donation; }
+    public void setDonation(ArrayList<Triplet<Book, Integer, Date>> donation) { Donation = donation; }
 
     @Override
     public String toString() {

@@ -36,10 +36,10 @@ public class LibrarySubscriberRepository {
         return new Pair<>(d1, d2);
     }
 
-    private List<Triplet<Book, Integer, Date>> getDonations(String donationsString, SimpleDateFormat formatter) throws ParseException {
-        List<Triplet<Book, Integer, Date>> donations = null;
+    private ArrayList<Triplet<Book, Integer, Date>> getDonations(String donationsString, SimpleDateFormat formatter) throws ParseException {
+        ArrayList<Triplet<Book, Integer, Date>> donations = new ArrayList<Triplet<Book, Integer, Date>>();
         if (!donationsString.equals("NaN")) {
-            String[] arrOfStr = donationsString.substring(1, donationsString.length() - 1).split(";");
+            String[] arrOfStr = donationsString.substring(1, donationsString.length() - 1).split(",");
             BookRepository books = new BookRepository();
             for (String arr : arrOfStr) {
                 arr = arr.substring(1, arr.length() - 1);
@@ -51,23 +51,23 @@ public class LibrarySubscriberRepository {
         return donations;
     }
 
-    private String formatDonations(List<Triplet<Book, Integer, Date>> donations) {
+    private String formatDonations(ArrayList<Triplet<Book, Integer, Date>> donations) {
         String donationsString = "NaN";
         if (!donations.isEmpty()) {
             StringBuilder donnationsBuilder = new StringBuilder();
-            donnationsBuilder.append("[");
+            donnationsBuilder.append("\"[");
             for (Triplet<Book, Integer, Date> don: donations) {
                 donnationsBuilder.append("(").append(don.getFirst().getId().toString()).
                         append(";").append(don.getSecond().toString()).append(";").append(don.getThird().toString()).append(");");
             }
             donnationsBuilder.deleteCharAt(donnationsBuilder.length() - 1);
-            donnationsBuilder.append("]");
+            donnationsBuilder.append("]\"");
             donationsString = donnationsBuilder.toString();
         }
         return donationsString;
     }
 
-    public void initializeLibrarySubscribersFromCSV() {
+    public void initializeLibrarySubscribersFromCSV() throws IOException, CsvException {
         try {
 
             // Create an object of filereader
@@ -98,10 +98,11 @@ public class LibrarySubscriberRepository {
                 return librarySubscriber;
             }).collect(Collectors.toList());
             LibrarySubscribers.addAll(csvObjectList);
+            csvReader.close();
         }
         catch (IOException | CsvException e) {
             Logger.logOperation("Initialized library subscribers from csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Initialized library subscribers from csv file. - SUCCESS");
     }
@@ -114,23 +115,30 @@ public class LibrarySubscriberRepository {
         return null;
     }
 
-    public Integer addLibrarySubscriber(LibrarySubscriber x){
+    public Integer addLibrarySubscriber(LibrarySubscriber x) throws IOException {
         List<Integer> ids = LibrarySubscribers.stream().map(LibrarySubscriber::getId).sorted(Comparator.comparing(Integer::valueOf)).
                 collect(Collectors.toList());
-        for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
-            if (!i.equals(ids.get(i))) {
-                x.setId(i);
-                break;
+        if (!ids.isEmpty()) {
+            x.setId(-1);
+            for (Integer i = 0, j = 0; i < ids.size() ; i += 1, j+= 1) {
+                if (!j.equals(ids.get(i))) {
+                    x.setId(j);
+                    break;
+                }
             }
+            if (x.getId().equals(-1)) x.setId(ids.get(ids.size() - 1) + 1);
+        } else {
+            x.setId(0);
         }
         try {
             FileWriter filewriter = new FileWriter("data/library_subscribers.csv", true);
             CSVWriter writer = new CSVWriter(filewriter);
             writer.writeNext(new String[]{x.getId().toString(), x.getName(), x.getPhoneNumber(),
                     x.getMembershipValidity().toStringForCsv(), x.getStudyLevel(), formatDonations(x.getDonation())});
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("New library subscriber added in csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         LibrarySubscribers.add(x);
         Logger.logOperation("New library subscriber added in csv file. - SUCCESS");
@@ -155,9 +163,10 @@ public class LibrarySubscriberRepository {
                         librarySubscriber.getPhoneNumber(), librarySubscriber.getMembershipValidity().toStringForCsv(),
                         librarySubscriber.getStudyLevel(), formatDonations(librarySubscriber.getDonation())});
             }
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("Library subscriber removed from csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Library subscriber removed from csv file. - SUCCESS");
     }
@@ -191,7 +200,7 @@ public class LibrarySubscriberRepository {
         }
     }
 
-    public void updateLibrarySubscriber(Integer id, LibrarySubscriber x){
+    public void updateLibrarySubscriber(Integer id, LibrarySubscriber x) throws IOException {
         x.setId(id);
         for (int i=0;i<LibrarySubscribers.size();i++)
         {
@@ -209,9 +218,10 @@ public class LibrarySubscriberRepository {
                         librarySubscriber.getPhoneNumber(), librarySubscriber.getMembershipValidity().toStringForCsv(),
                         librarySubscriber.getStudyLevel(), formatDonations(librarySubscriber.getDonation())});
             }
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("Library subscriber updated in csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Library subscriber updated in csv file. - SUCCESS");
     }

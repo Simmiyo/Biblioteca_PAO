@@ -23,17 +23,24 @@ public class Logger {
         List<Integer> ids = LoggedOperations.stream().map(LoggedOperation::getId).sorted(Comparator.comparing(Integer::valueOf)).
                 collect(Collectors.toList());
         LoggedOperation log = new LoggedOperation(operation, LocalDateTime.now());
-        for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
-            if (!i.equals(ids.get(i))) {
-                log.setId(i);
-                break;
+        if (!ids.isEmpty()) {
+            log.setId(-1);
+            for (Integer i = 0, j = 0; i < ids.size() ; i += 1, j+= 1) {
+                if (!j.equals(ids.get(i))) {
+                    log.setId(j);
+                    break;
+                }
             }
+            if (log.getId().equals(-1)) log.setId(ids.get(ids.size() - 1) + 1);
+        } else {
+            log.setId(0);
         }
         try {
             FileWriter filewriter = new FileWriter("data/operations_log.csv", true);
             CSVWriter writer = new CSVWriter(filewriter);
             writer.writeNext(new String[]{log.getId().toString(), log.getOperation(),
                     log.getTimeStamp().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"))});
+            writer.close();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -60,6 +67,7 @@ public class Logger {
                 writer.writeNext(new String[]{log.getId().toString(), log.getOperation(),
                         log.getTimeStamp().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"))});
             }
+            writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -71,6 +79,7 @@ public class Logger {
             FileWriter filewriter = new FileWriter("data/operations_log.csv");
             CSVWriter writer = new CSVWriter(filewriter);
             writer.writeNext(new String[]{"Id", "Operation", "TimeStamp"});
+            writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

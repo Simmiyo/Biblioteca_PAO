@@ -26,7 +26,7 @@ public class BookRepository {
         Books = new ArrayList<Book>();
     }
 
-    public void initializeBooksFromCSV() {
+    public void initializeBooksFromCSV() throws IOException, CsvException {
         try {
 
             // Create an object of filereader
@@ -61,11 +61,12 @@ public class BookRepository {
                 book.setCoverType(data[7].trim());
                 return book;
             }).collect(Collectors.toList());
-            this.Books.addAll(csvObjectList);
+            Books.addAll(csvObjectList);
+            csvReader.close();
         }
         catch (IOException | CsvException e) {
             Logger.logOperation("Initialized books from csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Initialized books from csv file. - SUCCESS");
     }
@@ -79,9 +80,8 @@ public class BookRepository {
     }
 
     public Integer addBook(Book x) throws Exception {
-        AuthorRepository authors = new AuthorRepository();
         boolean existsId = Boolean.FALSE;
-        for (Author author: authors.getAuthors()) {
+        for (Author author: AuthorRepository.getAuthors()) {
             if (x.getAuthor().getId().equals(author.getId())) {
                 existsId = Boolean.TRUE;
                 break;
@@ -91,9 +91,8 @@ public class BookRepository {
             Logger.logOperation("New book added in csv file. - FAILED");
             throw new Exception("The author of the book cannot be find in the database!");
         }
-        PublisherRepository publishers = new PublisherRepository();
         existsId = Boolean.FALSE;
-        for (Publisher publisher: publishers.getPublishers()) {
+        for (Publisher publisher: PublisherRepository.getPublishers()) {
             if (x.getPublisher().getId().equals(publisher.getId())) {
                 existsId = Boolean.TRUE;
                 break;
@@ -103,9 +102,8 @@ public class BookRepository {
             Logger.logOperation("New book added in csv file. - FAILED");
             throw new Exception("The publisher of the book cannot be find in the database!");
         }
-        SectionRepository sections = new SectionRepository();
         existsId = Boolean.FALSE;
-        for (Section section: sections.getSections()) {
+        for (Section section: SectionRepository.getSections()) {
             if (x.getSection().getId().equals(section.getId())) {
                 existsId = Boolean.TRUE;
                 break;
@@ -117,11 +115,17 @@ public class BookRepository {
         }
         List<Integer> ids = Books.stream().map(Book::getId).sorted(Comparator.comparing(Integer::valueOf)).
                 collect(Collectors.toList());
-        for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
-            if (!i.equals(ids.get(i))) {
-                x.setId(i);
-                break;
+        if (!ids.isEmpty()) {
+            x.setId(-1);
+            for (Integer i = 0, j = 0; i < ids.size() ; i += 1, j+= 1) {
+                if (!j.equals(ids.get(i))) {
+                    x.setId(j);
+                    break;
+                }
             }
+            if (x.getId().equals(-1)) x.setId(ids.get(ids.size() - 1) + 1);
+        } else {
+            x.setId(0);
         }
         try {
             FileWriter filewriter = new FileWriter("data/books.csv", true);
@@ -129,9 +133,10 @@ public class BookRepository {
             writer.writeNext(new String[]{x.getId().toString(), x.getISBN(), x.getTitle(),
                     x.getAuthor().getId().toString(), x.getPublisher().getId().toString(),
                     x.getSection().getId().toString(), x.getApparition().toString(),x.getCoverType()});
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("New book added in csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Books.add(x);
         Logger.logOperation("New book added in csv file. - SUCCESS");
@@ -168,9 +173,10 @@ public class BookRepository {
                         book.getAuthor().getId().toString(), book.getPublisher().getId().toString(),
                         book.getSection().getId().toString(), book.getApparition().toString(), book.getCoverType()});
             }
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("Book removed from csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Book removed from csv file. - SUCCESS");
     }
@@ -205,9 +211,8 @@ public class BookRepository {
     }
 
     public void updateBook(Integer id, Book x) throws Exception {
-        AuthorRepository authors = new AuthorRepository();
         boolean existsId = Boolean.FALSE;
-        for (Author author: authors.getAuthors()) {
+        for (Author author: AuthorRepository.getAuthors()) {
             if (x.getAuthor().getId().equals(author.getId())) {
                 existsId = Boolean.TRUE;
                 break;
@@ -217,9 +222,8 @@ public class BookRepository {
             Logger.logOperation("Book updated in csv file. - FAILED");
             throw new Exception("The author of the book cannot be find in the database!");
         }
-        PublisherRepository publishers = new PublisherRepository();
         existsId = Boolean.FALSE;
-        for (Publisher publisher: publishers.getPublishers()) {
+        for (Publisher publisher: PublisherRepository.getPublishers()) {
             if (x.getPublisher().getId().equals(publisher.getId())) {
                 existsId = Boolean.TRUE;
                 break;
@@ -229,9 +233,8 @@ public class BookRepository {
             Logger.logOperation("Book updated in csv file. - FAILED");
             throw new Exception("The publisher of the book cannot be find in the database!");
         }
-        SectionRepository sections = new SectionRepository();
         existsId = Boolean.FALSE;
-        for (Section section: sections.getSections()) {
+        for (Section section: SectionRepository.getSections()) {
             if (x.getSection().getId().equals(section.getId())) {
                 existsId = Boolean.TRUE;
                 break;
@@ -258,9 +261,10 @@ public class BookRepository {
                         book.getAuthor().getId().toString(), book.getPublisher().getId().toString(),
                         book.getSection().getId().toString(), book.getApparition().toString(), book.getCoverType()});
             }
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("Book updated in csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Book updated in csv file. - SUCCESS");
     }

@@ -24,7 +24,7 @@ public class LibrarianRepository {
 
     private Map<Integer, String> getSchedule(String scheduleString) {
         Map<Integer, String> schedule = new HashMap<Integer,String>();
-        String[] arrOfStr = scheduleString.split(";");
+        String[] arrOfStr = scheduleString.substring(1, scheduleString.length() - 1).split(",");
         for (String arr: arrOfStr) {
             arr = arr.substring(1, arr.length() - 1);
             String[] splitArr = arr.split(";");
@@ -36,12 +36,12 @@ public class LibrarianRepository {
     private String scheduleToString(Map<Integer, String> schedule) {
         StringBuilder scheduleString = new StringBuilder();
         for (Map.Entry<Integer, String> entry: schedule.entrySet()) {
-            scheduleString.append("(").append(entry.getKey().toString()).append(";").append(entry.getValue()).append(");");
+            scheduleString.append("\"(").append(entry.getKey().toString()).append(";").append(entry.getValue()).append(");");
         }
-        return StringUtils.chop(scheduleString.toString()); // remove last ; with chop
+        return StringUtils.chop(scheduleString.toString()) + "\""; // remove last ; with chop
     }
 
-    public void initializeLibrariansFromCSV() {
+    public void initializeLibrariansFromCSV() throws IOException, CsvException {
         try {
 
             // Create an object of filereader
@@ -64,10 +64,11 @@ public class LibrarianRepository {
                 return librarian;
             }).collect(Collectors.toList());
             Librarians.addAll(csvObjectList);
+            csvReader.close();
         }
         catch (IOException | CsvException e) {
             Logger.logOperation("Initialized librarians from csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Initialized librarians from csv file. - SUCCESS");
     }
@@ -80,29 +81,36 @@ public class LibrarianRepository {
         return null;
     }
 
-    public Integer addLibrarian(Librarian x){
+    public Integer addLibrarian(Librarian x) throws IOException {
         List<Integer> ids = Librarians.stream().map(Librarian::getId).sorted(Comparator.comparing(Integer::valueOf)).
                 collect(Collectors.toList());
-        for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
-            if (!i.equals(ids.get(i))) {
-                x.setId(i);
-                break;
+        if (!ids.isEmpty()) {
+            x.setId(-1);
+            for (Integer i = 0, j = 0; i < ids.size() ; i += 1, j+= 1) {
+                if (!j.equals(ids.get(i))) {
+                    x.setId(j);
+                    break;
+                }
             }
+            if (x.getId().equals(-1)) x.setId(ids.get(ids.size() - 1) + 1);
+        } else {
+            x.setId(0);
         }
         try {
             FileWriter filewriter = new FileWriter("data/librarians.csv", true);
             CSVWriter writer = new CSVWriter(filewriter);
             writer.writeNext(new String[]{x.getId().toString(), scheduleToString(x.getSchedule())});
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("New librarian added in csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Librarians.add(x);
         Logger.logOperation("New librarian added in csv file. - SUCCESS");
         return x.getId();
     }
 
-    public void deleteLibrarian(Integer id){
+    public void deleteLibrarian(Integer id) throws IOException {
         Librarians.removeIf(librarian -> librarian.getId().equals(id));
         try {
             FileWriter filewriter = new FileWriter("data/librarians.csv");
@@ -112,9 +120,10 @@ public class LibrarianRepository {
                 writer.writeNext(new String[]{librarian.getId().toString(), librarian.getName(), librarian.getPhoneNumber(),
                         scheduleToString(librarian.getSchedule())});
             }
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("Librarian removed from csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Librarian removed from csv file. - SUCCESS");
     }
@@ -130,20 +139,21 @@ public class LibrarianRepository {
         return Librarians;
     }
 
-    public void deleteLibrarians(){
+    public void deleteLibrarians() throws IOException {
        Librarians.clear();
         try {
             FileWriter filewriter = new FileWriter("data/librarians.csv");
             CSVWriter writer = new CSVWriter(filewriter);
             writer.writeNext(new String[] {"Id", "Name", "PhoneNumber", "Schedule"});
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("Deleted all librarians. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Deleted all librarians. - SUCCESS");
     }
 
-    public void updateLibrarian(Integer id, Librarian x){
+    public void updateLibrarian(Integer id, Librarian x) throws IOException {
         x.setId(id);
         for (int i=0;i<Librarians.size();i++)
         {
@@ -160,9 +170,10 @@ public class LibrarianRepository {
                 writer.writeNext(new String[]{librarian.getId().toString(), librarian.getName(), librarian.getPhoneNumber(),
                         scheduleToString(librarian.getSchedule())});
             }
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("Librarian updated in csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Librarian updated in csv file. - SUCCESS");
     }

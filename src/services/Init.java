@@ -1,7 +1,9 @@
 package services;
 
+import com.opencsv.exceptions.CsvException;
 import entities.*;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -24,7 +26,7 @@ public class Init {
 
     private Map<Integer, String> Schedule;
 
-    public Init() {
+    public Init() throws IOException, CsvException {
 //        String date1 = "20-01-1950";
 //        String date2 = "11-08-2000";
 //        SimpleDateFormat frmt = new SimpleDateFormat("dd-mm-yyyy");

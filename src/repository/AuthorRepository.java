@@ -31,7 +31,7 @@ public class AuthorRepository {
         return new Pair<>(d1, d2);
     }
 
-    public void initializeAuthorsFromCSV() {
+    public void initializeAuthorsFromCSV() throws IOException, CsvException {
         try {
 
             // Create an object of filereader
@@ -61,10 +61,11 @@ public class AuthorRepository {
                 return author;
             }).collect(Collectors.toList());
             Authors.addAll(csvObjectList);
+            csvReader.close();
         }
         catch (IOException | CsvException e) {
             Logger.logOperation("Initialized authors from csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Initialized authors from csv file. - SUCCESS");
     }
@@ -77,24 +78,31 @@ public class AuthorRepository {
         return null;
     }
 
-    public Integer addAuthor(Author x) {
+    public Integer addAuthor(Author x) throws IOException {
         List<Integer> ids = Authors.stream().map(Author::getId).sorted(Comparator.comparing(Integer::valueOf)).
                 collect(Collectors.toList());
-        for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
-            if (!i.equals(ids.get(i))) {
-                x.setId(i);
-                break;
+        if (!ids.isEmpty()) {
+            x.setId(-1);
+            for (Integer i = 0, j = 0; i < ids.size() ; i += 1, j+= 1) {
+                if (!j.equals(ids.get(i))) {
+                    x.setId(j);
+                    break;
+                }
             }
+            if (x.getId().equals(-1)) x.setId(ids.get(ids.size() - 1) + 1);
+        } else {
+            x.setId(0);
         }
         try {
             FileWriter filewriter = new FileWriter("data/authors.csv", true);
             CSVWriter writer = new CSVWriter(filewriter);
             writer.writeNext(new String[]{x.getId().toString(), x.getName(), x.getNationality(),
                     x.getMovement(), x.getActivity().toStringForCsv()});
+            writer.close();
 
         } catch (IOException e) {
             Logger.logOperation("New author added in csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Authors.add(x);
         Logger.logOperation("New author added in csv file. - SUCCESS");
@@ -118,9 +126,10 @@ public class AuthorRepository {
                 writer.writeNext(new String[]{author.getId().toString(), author.getName(), author.getNationality(),
                         author.getMovement(), author.getActivity().toStringForCsv()});
             }
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("Author removed from csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Author removed from csv file. - SUCCESS");
     }
@@ -154,7 +163,7 @@ public class AuthorRepository {
         }
     }
 
-    public void updateAuthor(Integer id, Author x){
+    public void updateAuthor(Integer id, Author x) throws IOException {
         x.setId(id);
         for (int i=0;i<Authors.size();i++)
         {
@@ -171,9 +180,10 @@ public class AuthorRepository {
                 writer.writeNext(new String[]{author.getId().toString(), author.getName(), author.getNationality(),
                         author.getMovement(), author.getActivity().toStringForCsv()});
             }
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("Author updated in csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Author updated in csv file. - SUCCESS");
     }

@@ -26,7 +26,7 @@ public class SectionRepository {
         Sections = new ArrayList<Section>();
     }
 
-    public void initializeSectionsFromCSV() {
+    public void initializeSectionsFromCSV() throws IOException, CsvException {
         try {
 
             // Create an object of filereader
@@ -48,10 +48,11 @@ public class SectionRepository {
                 return section;
             }).collect(Collectors.toList());
             Sections.addAll(csvObjectList);
+            csvReader.close();
         }
         catch (IOException | CsvException e) {
             Logger.logOperation("Initialized sections from csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Initialized sections from csv file. - SUCCESS");
     }
@@ -65,22 +66,29 @@ public class SectionRepository {
     }
 
 
-    public Integer addSection(Section x){
+    public Integer addSection(Section x) throws IOException {
         List<Integer> ids = Sections.stream().map(Section::getId).sorted(Comparator.comparing(Integer::valueOf)).
                 collect(Collectors.toList());
-        for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
-            if (!i.equals(ids.get(i))) {
-                x.setId(i);
-                break;
+        if (!ids.isEmpty()) {
+            x.setId(-1);
+            for (Integer i = 0, j = 0; i < ids.size() ; i += 1, j+= 1) {
+                if (!j.equals(ids.get(i))) {
+                    x.setId(j);
+                    break;
+                }
             }
+            if (x.getId().equals(-1)) x.setId(ids.get(ids.size() - 1) + 1);
+        } else {
+            x.setId(0);
         }
         try {
             FileWriter filewriter = new FileWriter("data/sections.csv", true);
             CSVWriter writer = new CSVWriter(filewriter);
             writer.writeNext(new String[]{x.getId().toString(), x.getLabel(), x.getBookshelf().toString()});
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("New section added in csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Sections.add(x);
         Logger.logOperation("New section added in csv file. - SUCCESS");
@@ -103,9 +111,10 @@ public class SectionRepository {
             for (Section sect: Sections) {
                 writer.writeNext(new String[]{sect.getId().toString(), sect.getLabel(), sect.getBookshelf().toString()});
             }
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("Section removed from csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Section removed from csv file. - SUCCESS");
     }
@@ -139,7 +148,7 @@ public class SectionRepository {
         }
     }
 
-    public void updateSection(Integer id, Section x){
+    public void updateSection(Integer id, Section x) throws IOException {
         x.setId(id);
         for (int i=0;i<Sections.size();i++)
         {
@@ -155,9 +164,10 @@ public class SectionRepository {
             for (Section sect: Sections) {
                 writer.writeNext(new String[]{sect.getId().toString(), sect.getLabel(), sect.getBookshelf().toString()});
             }
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("Section updated in csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Section updated in csv file. - SUCCESS");
     }

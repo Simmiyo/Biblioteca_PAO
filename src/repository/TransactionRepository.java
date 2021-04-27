@@ -26,7 +26,7 @@ public class TransactionRepository {
         Transactions = new ArrayList<Transaction>();
     }
 
-    public void initializeTransactionsFromCSV() {
+    public void initializeTransactionsFromCSV() throws IOException, CsvException {
         try {
 
             // Create an object of filereader
@@ -50,10 +50,11 @@ public class TransactionRepository {
                 return trans;
             }).collect(Collectors.toList());
             Transactions.addAll(csvObjectList);
+            csvReader.close();
         }
         catch (IOException | CsvException e) {
             Logger.logOperation("Initialized transactions from csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Initialized transactions from csv file. - SUCCESS");
     }
@@ -66,30 +67,37 @@ public class TransactionRepository {
         return null;
     }
 
-    public Integer addTransaction(Transaction x) {
+    public Integer addTransaction(Transaction x) throws IOException {
         List<Integer> ids = Transactions.stream().map(Transaction::getId).sorted(Comparator.comparing(Integer::valueOf)).
                 collect(Collectors.toList());
-        for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
-            if (!i.equals(ids.get(i))) {
-                x.setId(i);
-                break;
+        if (!ids.isEmpty()) {
+            x.setId(-1);
+            for (Integer i = 0, j = 0; i < ids.size() ; i += 1, j+= 1) {
+                if (!j.equals(ids.get(i))) {
+                    x.setId(j);
+                    break;
+                }
             }
+            if (x.getId().equals(-1)) x.setId(ids.get(ids.size() - 1) + 1);
+        } else {
+            x.setId(0);
         }
         try {
             FileWriter filewriter = new FileWriter("data/transactions.csv", true);
             CSVWriter writer = new CSVWriter(filewriter);
             writer.writeNext(new String[]{x.getId().toString(), x.getMoneySum().toString(),
                     x.getBuyer(), x.getSeller(), x.getReason()});
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("New transaction added in csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Transactions.add(x);
         Logger.logOperation("New transaction added in csv file. - SUCCESS");
         return x.getId();
     }
 
-    public void deleteTransaction(Integer id){
+    public void deleteTransaction(Integer id) throws IOException {
         Transactions.removeIf(transaction -> transaction.getId().equals(id));
         try {
             FileWriter filewriter = new FileWriter("data/transactions.csv");
@@ -99,9 +107,10 @@ public class TransactionRepository {
                 writer.writeNext(new String[]{transaction.getId().toString(), transaction.getMoneySum().toString(),
                         transaction.getBuyer(), transaction.getSeller(), transaction.getReason()});
             }
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("Transaction removed from csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Transaction removed from csv file. - SUCCESS");
     }
@@ -117,7 +126,7 @@ public class TransactionRepository {
         return Transactions;
     }
 
-    public void deleteTransactions(){
+    public void deleteTransactions() throws IOException {
         Transactions.clear();
         try {
             FileWriter filewriter = new FileWriter("data/transactions.csv");
@@ -125,12 +134,12 @@ public class TransactionRepository {
             writer.writeNext(new String[] {"Id", "MoneySum", "Buyer", "Seller", "Reason"});
         } catch (IOException e) {
             Logger.logOperation("Deleted all transactions. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Deleted all transactions. - SUCCESS");
     }
 
-    public void updateTransaction(Integer id, Transaction x){
+    public void updateTransaction(Integer id, Transaction x) throws IOException {
         x.setId(id);
         for (int i=0;i<Transactions.size();i++)
         {
@@ -147,9 +156,12 @@ public class TransactionRepository {
                 writer.writeNext(new String[]{trans.getId().toString(), trans.getMoneySum().toPlainString(),
                         trans.getBuyer(), trans.getSeller(), trans.getReason()});
             }
+            writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.logOperation("Transaction updated. - FAILED");
+            throw e;
         }
+        Logger.logOperation("Transaction updated. - SUCCESS");
     }
 
     public void sortTransactions()

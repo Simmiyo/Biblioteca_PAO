@@ -25,7 +25,7 @@ public class PublisherRepository {
         Publishers = new ArrayList<Publisher>();
     }
 
-    public void initializePublishersFromCSV() {
+    public void initializePublishersFromCSV() throws IOException, CsvException {
         try {
 
             // Create an object of filereader
@@ -48,10 +48,11 @@ public class PublisherRepository {
                 return publisher;
             }).collect(Collectors.toList());
             Publishers.addAll(csvObjectList);
+            csvReader.close();
         }
         catch (IOException | CsvException e) {
             Logger.logOperation("Initialized publishers from csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Initialized publishers from csv file. - SUCCESS");
     }
@@ -64,14 +65,20 @@ public class PublisherRepository {
         return null;
     }
 
-    public Integer addPublisher(Publisher x){
+    public Integer addPublisher(Publisher x) throws IOException {
         List<Integer> ids = Publishers.stream().map(Publisher::getId).sorted(Comparator.comparing(Integer::valueOf)).
                 collect(Collectors.toList());
-        for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
-            if (i.equals(ids.get(i))) {
-                x.setId(i);
-                break;
+        if (!ids.isEmpty()) {
+            x.setId(-1);
+            for (Integer i = 0, j = 0; i < ids.size() ; i += 1, j+= 1) {
+                if (!j.equals(ids.get(i))) {
+                    x.setId(j);
+                    break;
+                }
             }
+            if (x.getId().equals(-1)) x.setId(ids.get(ids.size() - 1) + 1);
+        } else {
+            x.setId(0);
         }
         try {
             FileWriter filewriter = new FileWriter("data/publishers.csv", true);
@@ -81,9 +88,10 @@ public class PublisherRepository {
             String[] bothParts = Stream.concat(Arrays.stream(firstPart), Arrays.stream(x.getBranchOffices()))
                     .toArray(String[]::new);
             writer.writeNext(bothParts);
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("New publisher added in csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Publishers.add(x);
         Logger.logOperation("New publisher added in csv file. - SUCCESS");
@@ -107,9 +115,10 @@ public class PublisherRepository {
                 writer.writeNext(new String[]{publisher.getId().toString(), publisher.getName(),
                         String.valueOf(publisher.getContractor()), String.join(";", publisher.getBranchOffices())});
             }
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("publisher removed from csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("publisher removed from csv file. - SUCCESS");
     }
@@ -143,7 +152,7 @@ public class PublisherRepository {
         }
     }
 
-    public void updatePublisher(Integer id, Publisher x){
+    public void updatePublisher(Integer id, Publisher x) throws IOException {
         x.setId(id);
         for (int i=0;i<Publishers.size();i++)
         {
@@ -160,9 +169,10 @@ public class PublisherRepository {
                 writer.writeNext(new String[]{publisher.getId().toString(), publisher.getName(),
                         String.valueOf(publisher.getContractor()), String.join(";", publisher.getBranchOffices())});
             }
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("Publisher updated in csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Publisher updated in csv file. - SUCCESS");
     }

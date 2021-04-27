@@ -29,9 +29,9 @@ public class BookReaderRepository {
         BookReaders = new ArrayList<BookReader>();
     }
 
-    private List<Triplet<Book, Date, Boolean>> getBorrowedBooks(String borrowedBooksString, SimpleDateFormat formatter) throws ParseException {
-        List<Triplet<Book, Date, Boolean>> borrowedBooks = null;
-        String[] arrOfStr = borrowedBooksString.substring(1, borrowedBooksString.length() - 1).split(";");
+    private ArrayList<Triplet<Book, Date, Boolean>> getBorrowedBooks(String borrowedBooksString, SimpleDateFormat formatter) throws ParseException {
+        ArrayList<Triplet<Book, Date, Boolean>> borrowedBooks = new ArrayList<Triplet<Book, Date, Boolean>>();
+        String[] arrOfStr = borrowedBooksString.substring(1, borrowedBooksString.length() - 1).split(",");
         BookRepository books = new BookRepository();
         for (String arr : arrOfStr) {
             arr = arr.substring(1, arr.length() - 1);
@@ -42,24 +42,24 @@ public class BookReaderRepository {
         return borrowedBooks;
     }
 
-    private String formatBorrowedBooks(List<Triplet<Book, Date, Boolean>> borrowedBooks) {
+    private String formatBorrowedBooks(ArrayList<Triplet<Book, Date, Boolean>> borrowedBooks) {
         String borrowedBooksString = "";
         if (!borrowedBooks.isEmpty()) {
             StringBuilder borrowedBooksBuilder = new StringBuilder();
-            borrowedBooksBuilder.append("[");
+            borrowedBooksBuilder.append("\"[");
             for (Triplet<Book, Date, Boolean> bor: borrowedBooks) {
                 borrowedBooksBuilder.append("(").append(bor.getFirst().getId().toString()).
                         append(";").append(bor.getSecond().toString()).append(";").append(bor.getThird().toString()).append(");");
             }
             borrowedBooksBuilder.deleteCharAt(borrowedBooksBuilder.length() - 1);
-            borrowedBooksBuilder.append("]");
+            borrowedBooksBuilder.append("]\"");
             borrowedBooksString = borrowedBooksBuilder.toString();
         }
         return borrowedBooksString;
     }
 
 
-    public void initializeBookReadersFromCSV() {
+    public void initializeBookReadersFromCSV() throws IOException, CsvException {
         try {
 
             // Create an object of filereader
@@ -90,10 +90,11 @@ public class BookReaderRepository {
                 return bookReader;
             }).collect(Collectors.toList());
             BookReaders.addAll(csvObjectList);
+            csvReader.close();
         }
         catch (IOException | CsvException e) {
             Logger.logOperation("Initialized book readers from csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Initialized book readers from csv file. - SUCCESS");
     }
@@ -106,7 +107,7 @@ public class BookReaderRepository {
         return null;
     }
 
-    public Integer addBookReader(BookReader x) {
+    public Integer addBookReader(BookReader x) throws IOException {
         LibrarySubscriberRepository librarySubscriberRepository = new LibrarySubscriberRepository();
         x.setId(librarySubscriberRepository.addLibrarySubscriber(new LibrarySubscriber(x.getName(), x.getPhoneNumber(),
                 x.getMembershipValidity(), x.getStudyLevel(), x.getDonation())));
@@ -115,16 +116,17 @@ public class BookReaderRepository {
             CSVWriter writer = new CSVWriter(filewriter);
             writer.writeNext(new String[]{x.getId().toString(), x.getAddress(), formatBorrowedBooks(x.getBorrowedBooks()),
                     x.getPenaltyPoints().toString(), x.getFidelityPoints().toString()});
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("New book reader added in csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         BookReaders.add(x);
         Logger.logOperation("New book reader added in csv file. - SUCCESS");
         return x.getId();
     }
 
-    public void deleteBookReader(Integer id){
+    public void deleteBookReader(Integer id) throws IOException {
         BookReaders.removeIf(bookReader -> bookReader.getId().equals(id));
         try {
             FileWriter filewriter = new FileWriter("data/book_readers.csv");
@@ -134,9 +136,10 @@ public class BookReaderRepository {
                 writer.writeNext(new String[]{bookReader.getId().toString(), bookReader.getAddress(), formatBorrowedBooks(bookReader.getBorrowedBooks()),
                         bookReader.getPenaltyPoints().toString(), bookReader.getFidelityPoints().toString()});
             }
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("Book reader removed from csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Book reader removed from csv file. - SUCCESS");
     }
@@ -152,20 +155,21 @@ public class BookReaderRepository {
         return BookReaders;
     }
 
-    public void deleteBookReaders(){
+    public void deleteBookReaders() throws IOException {
         BookReaders.clear();
         try {
             FileWriter filewriter = new FileWriter("data/book_readers.csv");
             CSVWriter writer = new CSVWriter(filewriter);
             writer.writeNext(new String[] {"SubscriberId", "Address", "BorrowedBooks", "PenaltyPoints", "FidelityPoints"});
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("Deleted all book readers. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Deleted all book readers. - SUCCESS");
     }
 
-    public void updateBookReader(Integer id, BookReader x){
+    public void updateBookReader(Integer id, BookReader x) throws IOException {
         x.setId(id);
         LibrarySubscriberRepository librarySubscriberRepository = new LibrarySubscriberRepository();
         for (int i=0;i<BookReaders.size();i++)
@@ -185,9 +189,10 @@ public class BookReaderRepository {
                 writer.writeNext(new String[]{bookReader.getId().toString(), bookReader.getAddress(), formatBorrowedBooks(bookReader.getBorrowedBooks()),
                         bookReader.getPenaltyPoints().toString(), bookReader.getFidelityPoints().toString()});
             }
+            writer.close();
         } catch (IOException e) {
             Logger.logOperation("Book reader updated in csv file. - FAILED");
-            e.printStackTrace();
+            throw e;
         }
         Logger.logOperation("Book reader updated in csv file. - SUCCESS");
     }

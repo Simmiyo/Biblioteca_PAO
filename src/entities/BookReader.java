@@ -7,12 +7,12 @@ import services.Triplet;
 
 public class BookReader extends LibrarySubscriber {
     private String Address;
-    private List<Triplet<Book, Date, Boolean>> BorrowedBooks; // borrowed books & date they were borrowed & the return status
+    private ArrayList<Triplet<Book, Date, Boolean>> BorrowedBooks; // borrowed books & date they were borrowed & the return status
     private Integer PenaltyPoints;
     private Integer FidelityPoints;
 
     public BookReader(String name, String phone, Pair<Date, Date> member, String study,
-                      List<Triplet<Book, Integer, Date>> donation, String address, List<Triplet<Book, Date, Boolean>> borrowed,
+                      ArrayList<Triplet<Book, Integer, Date>> donation, String address, ArrayList<Triplet<Book, Date, Boolean>> borrowed,
                       Integer penaltyPoints, Integer fidelityPoints) {
         super(name, phone, member, study, donation);
         Address = address;
@@ -31,7 +31,7 @@ public class BookReader extends LibrarySubscriber {
 
     public String getAddress() { return Address; }
 
-    public List<Triplet<Book, Date, Boolean>> getBorrowedBooks() { return BorrowedBooks; }
+    public ArrayList<Triplet<Book, Date, Boolean>> getBorrowedBooks() { return BorrowedBooks; }
 
     public Integer getPenaltyPoints() { return PenaltyPoints; }
 
@@ -39,7 +39,7 @@ public class BookReader extends LibrarySubscriber {
 
     public void setAddress(String address) { Address = address; }
 
-    public void setBorrowedBooks(List<Triplet<Book, Date, Boolean>> borrowedBooks) { BorrowedBooks = borrowedBooks; }
+    public void setBorrowedBooks(ArrayList<Triplet<Book, Date, Boolean>> borrowedBooks) { BorrowedBooks = borrowedBooks; }
 
     public void setPenaltyPoints(Integer penaltyPoints) { PenaltyPoints = penaltyPoints; }
 
