@@ -11,7 +11,7 @@ public class Main {
         Init ob = new Init();
         Library lib = Library.getInstance();
         Library.setRepository(ob);
-        lib.setTransactions(ob.getAllTranscations());
+        lib.setTransactions(ob.getAllTransactions());
         lib.setMaxDaysBorrow(60);
         lib.setSubscribers(ob.getAllSubscribers());
         lib.setLibrarians(ob.getAllLibrarians());

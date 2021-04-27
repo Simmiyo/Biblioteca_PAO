@@ -5,31 +5,28 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 import com.opencsv.exceptions.CsvException;
-import entities.Author;
-import entities.Book;
-import entities.Publisher;
-import entities.Section;
+import entities.*;
+import services.Logger;
+import services.Triplet;
 
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
 public class BookRepository {
-    ArrayList<Book> Books = new ArrayList<Book>();
 
-    public BookRepository(){
+    private static ArrayList<Book> Books;
 
+    public static void initBooks() {
+        Books = new ArrayList<Book>();
     }
 
-    public void InitializeBooksFromCSV() {
+    public void initializeBooksFromCSV() {
         try {
 
             // Create an object of filereader
@@ -58,6 +55,7 @@ public class BookRepository {
                 try {
                     book.setApparition(frmt.parse(data[6].trim()));
                 } catch (ParseException e) {
+                    Logger.logOperation("Initialized books from csv file. - FAILED");
                     e.printStackTrace();
                 }
                 book.setCoverType(data[7].trim());
@@ -66,8 +64,10 @@ public class BookRepository {
             this.Books.addAll(csvObjectList);
         }
         catch (IOException | CsvException e) {
+            Logger.logOperation("Initialized books from csv file. - FAILED");
             e.printStackTrace();
         }
+        Logger.logOperation("Initialized books from csv file. - SUCCESS");
     }
 
     public Book getBook(Integer id){
@@ -78,7 +78,7 @@ public class BookRepository {
         return null;
     }
 
-    public void addBook(Book x) throws Exception {
+    public Integer addBook(Book x) throws Exception {
         AuthorRepository authors = new AuthorRepository();
         boolean existsId = Boolean.FALSE;
         for (Author author: authors.getAuthors()) {
@@ -88,6 +88,7 @@ public class BookRepository {
             }
         }
         if (existsId == Boolean.FALSE) {
+            Logger.logOperation("New book added in csv file. - FAILED");
             throw new Exception("The author of the book cannot be find in the database!");
         }
         PublisherRepository publishers = new PublisherRepository();
@@ -99,6 +100,7 @@ public class BookRepository {
             }
         }
         if (existsId == Boolean.FALSE) {
+            Logger.logOperation("New book added in csv file. - FAILED");
             throw new Exception("The publisher of the book cannot be find in the database!");
         }
         SectionRepository sections = new SectionRepository();
@@ -110,10 +112,11 @@ public class BookRepository {
             }
         }
         if (existsId == Boolean.FALSE) {
+            Logger.logOperation("New book added in csv file. - FAILED");
             throw new Exception("The section of the book cannot be find in the database!");
         }
-        List<Integer> ids = Books.stream().map(Book::getId).collect(Collectors.toList());
-        ids.sort(Comparator.comparing(Integer::valueOf));
+        List<Integer> ids = Books.stream().map(Book::getId).sorted(Comparator.comparing(Integer::valueOf)).
+                collect(Collectors.toList());
         for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
             if (!i.equals(ids.get(i))) {
                 x.setId(i);
@@ -127,30 +130,78 @@ public class BookRepository {
                     x.getAuthor().getId().toString(), x.getPublisher().getId().toString(),
                     x.getSection().getId().toString(), x.getApparition().toString(),x.getCoverType()});
         } catch (IOException e) {
+            Logger.logOperation("New book added in csv file. - FAILED");
             e.printStackTrace();
         }
-        this.Books.add(x);
+        Books.add(x);
+        Logger.logOperation("New book added in csv file. - SUCCESS");
+        return x.getId();
     }
 
 
-    public void deleteBook(Book x){
-        this.Books.remove(x);
+    public void deleteBook(Integer id) throws Exception {
+        for (LibrarySubscriber librarySubscriber: LibrarySubscriberRepository.getLibrarySubscribers()) {
+            for (Triplet<Book, Integer, Date> donation: librarySubscriber.getDonation()) {
+                if (donation.getFirst().getId().equals(id)) {
+                    Logger.logOperation("Book removed from csv file. - FAILED");
+                    throw new Exception("This book is referenced in the LibrarySubscriber database. " +
+                            "A referenced object cannot be removed");
+                }
+            }
+        }
+        for (BookReader bookReader: BookReaderRepository.getBookReaders()) {
+            for (Triplet<Book, Date, Boolean> borrowed: bookReader.getBorrowedBooks()) {
+                if (borrowed.getFirst().getId().equals(id)) {
+                    Logger.logOperation("Book removed from csv file. - FAILED");
+                    throw new Exception("This book is referenced in the BookReaders database. " +
+                            "A referenced object cannot be removed");
+                }
+            }
+        }
+        Books.removeIf(book -> book.getId().equals(id));
+        try {
+            FileWriter filewriter = new FileWriter("data/books.csv");
+            CSVWriter writer = new CSVWriter(filewriter);
+            writer.writeNext(new String[] {"Id", "ISBN", "Title", "Author", "Publisher", "Section", "Apparition", "CoverType"});
+            for (Book book: Books) {
+                writer.writeNext(new String[]{book.getId().toString(), book.getISBN(), book.getTitle(),
+                        book.getAuthor().getId().toString(), book.getPublisher().getId().toString(),
+                        book.getSection().getId().toString(), book.getApparition().toString(), book.getCoverType()});
+            }
+        } catch (IOException e) {
+            Logger.logOperation("Book removed from csv file. - FAILED");
+            e.printStackTrace();
+        }
+        Logger.logOperation("Book removed from csv file. - SUCCESS");
     }
 
     public Book aboutBook(Integer id){
-        for (Book book : this.Books)
+        for (Book book : Books)
             if (book.getId().equals(id))
                 return book;
         return null;
     }
 
-    public ArrayList<Book> getBooks() {
+    public static ArrayList<Book> getBooks() {
         return Books;
     }
 
-    public void deleteBooks(){
-        while (this.Books.isEmpty()!=true)
-            this.Books.remove(0);
+    public void deleteBooks() throws  Exception {
+        boolean fullDelete = Boolean.TRUE;
+        for (Book book : Books) {
+            try {
+                deleteBook(book.getId());
+            } catch (Exception e) {
+                fullDelete = Boolean.FALSE;
+            }
+        }
+        if (fullDelete) {
+            Logger.logOperation("Delete all books. - SUCCESS");
+        } else {
+            Logger.logOperation("Delete all books. - FAILED");
+            throw new Exception("Some of the books could not be deleted because they are referenced somewhere else. " +
+                    "A referenced object cannot be removed");
+        }
     }
 
     public void updateBook(Integer id, Book x) throws Exception {
@@ -163,6 +214,7 @@ public class BookRepository {
             }
         }
         if (existsId == Boolean.FALSE) {
+            Logger.logOperation("Book updated in csv file. - FAILED");
             throw new Exception("The author of the book cannot be find in the database!");
         }
         PublisherRepository publishers = new PublisherRepository();
@@ -174,6 +226,7 @@ public class BookRepository {
             }
         }
         if (existsId == Boolean.FALSE) {
+            Logger.logOperation("Book updated in csv file. - FAILED");
             throw new Exception("The publisher of the book cannot be find in the database!");
         }
         SectionRepository sections = new SectionRepository();
@@ -185,28 +238,31 @@ public class BookRepository {
             }
         }
         if (existsId == Boolean.FALSE) {
+            Logger.logOperation("Book updated in csv file. - FAILED");
             throw new Exception("The section of the book cannot be find in the database!");
         }
         x.setId(id);
-        for (int i=0;i<this.Books.size();i++)
+        for (int i=0;i<Books.size();i++)
         {
-            if(this.Books.get(i).getId().equals(id)) {
-                this.Books.set(i, x);
+            if(Books.get(i).getId().equals(id)) {
+                Books.set(i, x);
                 break;
             }
         }
         try {
-            FileWriter filewriter = new FileWriter("data/authors.csv");
+            FileWriter filewriter = new FileWriter("data/books.csv");
             CSVWriter writer = new CSVWriter(filewriter);
             writer.writeNext(new String[] {"Id", "ISBN", "Title", "Author", "Publisher", "Section", "Apparition", "CoverType"});
             for (Book book: Books) {
-                writer.writeNext(new String[]{x.getId().toString(), x.getISBN(), x.getTitle(),
-                        x.getAuthor().getId().toString(), x.getPublisher().getId().toString(),
-                        x.getSection().getId().toString(), x.getApparition().toString(),x.getCoverType()});
+                writer.writeNext(new String[]{book.getId().toString(), book.getISBN(), book.getTitle(),
+                        book.getAuthor().getId().toString(), book.getPublisher().getId().toString(),
+                        book.getSection().getId().toString(), book.getApparition().toString(), book.getCoverType()});
             }
         } catch (IOException e) {
+            Logger.logOperation("Book updated in csv file. - FAILED");
             e.printStackTrace();
         }
+        Logger.logOperation("Book updated in csv file. - SUCCESS");
     }
 
     public void sortBooks()

@@ -4,7 +4,10 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 import com.opencsv.exceptions.CsvException;
+import entities.Author;
+import entities.Book;
 import entities.Section;
+import services.Logger;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -16,14 +19,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class SectionRepository {
-    ArrayList<Section> Sections = new ArrayList<Section>();
 
+    private static ArrayList<Section> Sections;
 
-    public SectionRepository(){
-
+    public static void initSections() {
+        Sections = new ArrayList<Section>();
     }
 
-    public void InitializeSectionsFromCSV() {
+    public void initializeSectionsFromCSV() {
         try {
 
             // Create an object of filereader
@@ -44,11 +47,13 @@ public class SectionRepository {
                 section.setBookshelf(data[2].trim().charAt(0));
                 return section;
             }).collect(Collectors.toList());
-            this.Sections.addAll(csvObjectList);
+            Sections.addAll(csvObjectList);
         }
         catch (IOException | CsvException e) {
+            Logger.logOperation("Initialized sections from csv file. - FAILED");
             e.printStackTrace();
         }
+        Logger.logOperation("Initialized sections from csv file. - SUCCESS");
     }
 
     public Section getSection(Integer id){
@@ -60,9 +65,9 @@ public class SectionRepository {
     }
 
 
-    public void addSection(Section x){
-        List<Integer> ids = Sections.stream().map(Section::getId).collect(Collectors.toList());
-        ids.sort(Comparator.comparing(Integer::valueOf));
+    public Integer addSection(Section x){
+        List<Integer> ids = Sections.stream().map(Section::getId).sorted(Comparator.comparing(Integer::valueOf)).
+                collect(Collectors.toList());
         for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
             if (!i.equals(ids.get(i))) {
                 x.setId(i);
@@ -74,38 +79,72 @@ public class SectionRepository {
             CSVWriter writer = new CSVWriter(filewriter);
             writer.writeNext(new String[]{x.getId().toString(), x.getLabel(), x.getBookshelf().toString()});
         } catch (IOException e) {
+            Logger.logOperation("New section added in csv file. - FAILED");
             e.printStackTrace();
         }
-        this.Sections.add(x);
+        Sections.add(x);
+        Logger.logOperation("New section added in csv file. - SUCCESS");
+        return x.getId();
     }
 
-    //ramas
-    public void deleteSection(Section x){
-        this.Sections.remove(x);
+    public void deleteSection(Integer id) throws Exception {
+        for (Book book: BookRepository.getBooks()) {
+            if (book.getSection().getId().equals(id)) {
+                Logger.logOperation("Section removed from csv file. - FAILED");
+                throw new Exception("This section is referenced in the Books database. " +
+                        "A referenced object cannot be removed");
+            }
+        }
+        Sections.removeIf(section -> section.getId().equals(id));
+        try {
+            FileWriter filewriter = new FileWriter("data/sections.csv");
+            CSVWriter writer = new CSVWriter(filewriter);
+            writer.writeNext(new String[] {"Id", "Label", "Bookshelf"});
+            for (Section sect: Sections) {
+                writer.writeNext(new String[]{sect.getId().toString(), sect.getLabel(), sect.getBookshelf().toString()});
+            }
+        } catch (IOException e) {
+            Logger.logOperation("Section removed from csv file. - FAILED");
+            e.printStackTrace();
+        }
+        Logger.logOperation("Section removed from csv file. - SUCCESS");
     }
 
     public Section aboutSection(Integer id){
-        for (Section section : this.Sections)
+        for (Section section : Sections)
             if (section.getId().equals(id))
                 return section;
         return null;
     }
 
-    public ArrayList<Section> getSections() {
+    public static ArrayList<Section> getSections() {
         return Sections;
     }
 
-    public void deleteSections(){
-        while (!this.Sections.isEmpty())
-            this.Sections.remove(0);
+    public void deleteSections() throws Exception {
+        boolean fullDelete = Boolean.TRUE;
+        for (Section section : Sections) {
+            try {
+                deleteSection(section.getId());
+            } catch (Exception e) {
+                fullDelete = Boolean.FALSE;
+            }
+        }
+        if (fullDelete) {
+            Logger.logOperation("Delete all sections. - SUCCESS");
+        } else {
+            Logger.logOperation("Delete all sections. - FAILED");
+            throw new Exception("Some of the sections could not be deleted because they are referenced somewhere else. " +
+                    "A referenced object cannot be removed");
+        }
     }
 
     public void updateSection(Integer id, Section x){
         x.setId(id);
-        for (int i=0;i<this.Sections.size();i++)
+        for (int i=0;i<Sections.size();i++)
         {
-            if(this.Sections.get(i).getId().equals(id)) {
-                this.Sections.set(i, x);
+            if(Sections.get(i).getId().equals(id)) {
+                Sections.set(i, x);
                 break;
             }
         }
@@ -117,8 +156,10 @@ public class SectionRepository {
                 writer.writeNext(new String[]{sect.getId().toString(), sect.getLabel(), sect.getBookshelf().toString()});
             }
         } catch (IOException e) {
+            Logger.logOperation("Section updated in csv file. - FAILED");
             e.printStackTrace();
         }
+        Logger.logOperation("Section updated in csv file. - SUCCESS");
     }
 
     public void sortSections()

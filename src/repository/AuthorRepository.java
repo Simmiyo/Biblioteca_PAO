@@ -5,6 +5,8 @@ import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 import com.opencsv.exceptions.CsvException;
 import entities.Author;
+import entities.Book;
+import services.Logger;
 import services.Pair;
 
 import java.io.FileReader;
@@ -16,11 +18,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class AuthorRepository {
-    ArrayList<Author> Authors = new ArrayList<Author>();
 
+    private static ArrayList<Author> Authors;
 
-    public AuthorRepository(){
-
+    public static void initAuthors() {
+        Authors = new ArrayList<Author>();
     }
 
     private Pair<Date, Date> getActivity(String activity, SimpleDateFormat formatter) throws ParseException {
@@ -29,7 +31,7 @@ public class AuthorRepository {
         return new Pair<>(d1, d2);
     }
 
-    public void InitializeAuthorsFromCSV() {
+    public void initializeAuthorsFromCSV() {
         try {
 
             // Create an object of filereader
@@ -53,15 +55,18 @@ public class AuthorRepository {
                 try {
                     author.setActivity(getActivity(data[4].trim(), frmt));
                 } catch (ParseException e) {
+                    Logger.logOperation("Initialized authors from csv file. - FAILED");
                     e.printStackTrace();
                 }
                 return author;
             }).collect(Collectors.toList());
-            this.Authors.addAll(csvObjectList);
+            Authors.addAll(csvObjectList);
         }
         catch (IOException | CsvException e) {
+            Logger.logOperation("Initialized authors from csv file. - FAILED");
             e.printStackTrace();
         }
+        Logger.logOperation("Initialized authors from csv file. - SUCCESS");
     }
 
     public Author getAuthor(Integer id){
@@ -72,9 +77,9 @@ public class AuthorRepository {
         return null;
     }
 
-    public void addAuthor(Author x) {
-        List<Integer> ids = Authors.stream().map(Author::getId).collect(Collectors.toList());
-        ids.sort(Comparator.comparing(Integer::valueOf));
+    public Integer addAuthor(Author x) {
+        List<Integer> ids = Authors.stream().map(Author::getId).sorted(Comparator.comparing(Integer::valueOf)).
+                collect(Collectors.toList());
         for (Integer i = 0; i < ids.get(ids.size() - 1) + 1; i += 1) {
             if (!i.equals(ids.get(i))) {
                 x.setId(i);
@@ -88,38 +93,73 @@ public class AuthorRepository {
                     x.getMovement(), x.getActivity().toStringForCsv()});
 
         } catch (IOException e) {
+            Logger.logOperation("New author added in csv file. - FAILED");
             e.printStackTrace();
         }
-        this.Authors.add(x);
+        Authors.add(x);
+        Logger.logOperation("New author added in csv file. - SUCCESS");
+        return x.getId();
     }
 
-    // mai ramane delete
-    public void deleteAuthor(Author x){
-        this.Authors.remove(x);
+    public void deleteAuthor(Integer id) throws Exception {
+        for (Book book: BookRepository.getBooks()) {
+            if (book.getAuthor().getId().equals(id)) {
+                Logger.logOperation("Author removed from csv file. - FAILED");
+                throw new Exception("This author is referenced in the Books database. " +
+                        "A referenced object cannot be removed");
+            }
+        }
+        Authors.removeIf(author -> author.getId().equals(id));
+        try {
+            FileWriter filewriter = new FileWriter("data/authors.csv");
+            CSVWriter writer = new CSVWriter(filewriter);
+            writer.writeNext(new String[] {"Id", "Name", "Nationality", "Movement", "Activity"});
+            for (Author author: Authors) {
+                writer.writeNext(new String[]{author.getId().toString(), author.getName(), author.getNationality(),
+                        author.getMovement(), author.getActivity().toStringForCsv()});
+            }
+        } catch (IOException e) {
+            Logger.logOperation("Author removed from csv file. - FAILED");
+            e.printStackTrace();
+        }
+        Logger.logOperation("Author removed from csv file. - SUCCESS");
     }
 
     public Author aboutAuthor(Integer id){
-        for (Author author : this.Authors)
+        for (Author author : Authors)
             if (author.getId().equals(id))
                 return author;
         return null;
     }
 
-    public ArrayList<Author> getAuthors() {
+    public static ArrayList<Author> getAuthors() {
         return Authors;
     }
 
-    public void deleteAuthors(){
-        while (!this.Authors.isEmpty())
-            this.Authors.remove(0);
+    public void deleteAuthors() throws Exception {
+        boolean fullDelete = Boolean.TRUE;
+        for (Author author : Authors) {
+            try {
+                deleteAuthor(author.getId());
+            } catch (Exception e) {
+                fullDelete = Boolean.FALSE;
+            }
+        }
+        if (fullDelete) {
+            Logger.logOperation("Delete all authors. - SUCCESS");
+        } else {
+            Logger.logOperation("Delete all authors. - FAILED");
+            throw new Exception("Some of the authors could not be deleted because they are referenced somewhere else. " +
+                    "A referenced object cannot be removed");
+        }
     }
 
     public void updateAuthor(Integer id, Author x){
         x.setId(id);
-        for (int i=0;i<this.Authors.size();i++)
+        for (int i=0;i<Authors.size();i++)
         {
-            if(this.Authors.get(i).getId().equals(id)) {
-                this.Authors.set(i, x);
+            if(Authors.get(i).getId().equals(id)) {
+                Authors.set(i, x);
                 break;
             }
         }
@@ -132,8 +172,10 @@ public class AuthorRepository {
                         author.getMovement(), author.getActivity().toStringForCsv()});
             }
         } catch (IOException e) {
+            Logger.logOperation("Author updated in csv file. - FAILED");
             e.printStackTrace();
         }
+        Logger.logOperation("Author updated in csv file. - SUCCESS");
     }
 
     public void sortAuthors()
