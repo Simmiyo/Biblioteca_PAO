@@ -128,10 +128,10 @@ public class LibrarianRepository {
         Logger.logOperation("Librarian removed from csv file. - SUCCESS");
     }
 
-    public Librarian aboutLibrarian(Integer id){
+    public String aboutLibrarian(Integer id){
         for (Librarian librarian : Librarians)
             if (librarian.getId().equals(id))
-                return librarian;
+                return librarian.toString();
         return null;
     }
 

@@ -119,10 +119,10 @@ public class SectionRepository {
         Logger.logOperation("Section removed from csv file. - SUCCESS");
     }
 
-    public Section aboutSection(Integer id){
+    public String aboutSection(Integer id){
         for (Section section : Sections)
             if (section.getId().equals(id))
-                return section;
+                return section.toString();
         return null;
     }
 

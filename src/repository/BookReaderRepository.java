@@ -144,10 +144,10 @@ public class BookReaderRepository {
         Logger.logOperation("Book reader removed from csv file. - SUCCESS");
     }
 
-    public BookReader aboutBookReader(Integer id){
+    public String aboutBookReader(Integer id){
         for (BookReader bookReader : BookReaders)
             if (bookReader.getId().equals(id))
-                return bookReader;
+                return bookReader.toString();
         return null;
     }
 

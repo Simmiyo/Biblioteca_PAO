@@ -1,13 +1,8 @@
 package main;
 
-import com.opencsv.exceptions.CsvException;
-import entities.Publisher;
 import entities.Section;
-import entities.Transaction;
 import services.Library;
 
-import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,7 +29,8 @@ public class Main {
 //            lib.addSection(new Section("Fiction", 'R'));
 //            lib.addPublisher(new Publisher("Jhon", true, new String[]{"Gustav Mistress", "Hector the Great"}));
 //            lib.deletePublisher(new Integer(2));
-            lib.updateSection(2, new Section("Science-Fiction", 'S'));
+            lib.updateSection(2, new Section("Fiction", 'R'));
+            System.out.println(lib.aboutAuthors(1));
         } catch (Exception e) {
             e.printStackTrace();
         }

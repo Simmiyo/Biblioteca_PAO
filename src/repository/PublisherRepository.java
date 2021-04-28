@@ -125,10 +125,10 @@ public class PublisherRepository {
         Logger.logOperation("publisher removed from csv file. - SUCCESS");
     }
 
-    public Publisher aboutPublisher(Integer id){
+    public String aboutPublisher(Integer id){
         for (Publisher publisher : Publishers)
             if (publisher.getId().equals(id))
-                return publisher;
+                return publisher.toString();
         return null;
     }
 

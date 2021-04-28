@@ -181,10 +181,10 @@ public class BookRepository {
         Logger.logOperation("Book removed from csv file. - SUCCESS");
     }
 
-    public Book aboutBook(Integer id){
+    public String aboutBook(Integer id){
         for (Book book : Books)
             if (book.getId().equals(id))
-                return book;
+                return book.toString();
         return null;
     }
 

@@ -134,10 +134,10 @@ public class AuthorRepository {
         Logger.logOperation("Author removed from csv file. - SUCCESS");
     }
 
-    public Author aboutAuthor(Integer id){
+    public String aboutAuthor(Integer id){
         for (Author author : Authors)
             if (author.getId().equals(id))
-                return author;
+                return author.toString();
         return null;
     }
 

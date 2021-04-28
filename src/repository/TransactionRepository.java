@@ -115,10 +115,10 @@ public class TransactionRepository {
         Logger.logOperation("Transaction removed from csv file. - SUCCESS");
     }
 
-    public Transaction aboutTransaction(String buyer, String seller){
+    public String aboutTransaction(String buyer, String seller){
         for (Transaction transaction : Transactions)
             if (transaction.getBuyer().equals(buyer) && transaction.getSeller().equals(seller))
-                return transaction;
+                return transaction.toString();
         return null;
     }
 

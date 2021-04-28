@@ -171,10 +171,10 @@ public class LibrarySubscriberRepository {
         Logger.logOperation("Library subscriber removed from csv file. - SUCCESS");
     }
 
-    public LibrarySubscriber aboutLibrarySubscriber(Integer id){
+    public String aboutLibrarySubscriber(Integer id){
         for (LibrarySubscriber librarySubscriber : LibrarySubscribers)
             if (librarySubscriber.getId().equals(id))
-                return librarySubscriber;
+                return librarySubscriber.toString();
         return null;
     }
 

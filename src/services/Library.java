@@ -164,6 +164,14 @@ public class Library {
     public void deleteLibrarians() throws Exception { librariansRepository.deleteLibrarians();}
 
 
+    public String aboutAuthors(Integer id) { return authorsRepository.aboutAuthor(id); }
+    public String aboutBooks(Integer id) { return booksRepository.aboutBook(id); }
+    public String aboutPublishers(Integer id) { return publishersRepository.aboutPublisher(id); }
+    public String aboutSections(Integer id) { return sectionsRepository.aboutSection(id); }
+    public String aboutReaders(Integer id) { return bookReadersRepository.aboutBookReader(id); }
+    public String aboutSubscriber(Integer id) { return librarySubscribersRepository.aboutLibrarySubscriber(id); }
+    public String aboutLibrarians(Integer id) { return librariansRepository.aboutLibrarian(id); }
+
     @Override
     public String toString() {
         return "Library{" +
@@ -205,7 +213,6 @@ public class Library {
     }
 
     public boolean isAvailable(Book book) {
-
         return availability.get(book);
     }
 

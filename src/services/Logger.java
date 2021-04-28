@@ -1,7 +1,6 @@
 package services;
 
 import com.opencsv.CSVWriter;
-import entities.Author;
 
 import java.io.FileWriter;
 import java.io.IOException;
